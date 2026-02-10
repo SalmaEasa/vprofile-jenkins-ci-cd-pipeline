@@ -106,7 +106,7 @@ stage('Sonar Analysis') {
         stage("Build App Image"){
             steps{
                 script {
-                    dockerImage = docker.build( appRegistry + ":$BUILD_NUMBER", "./Docker-files/app/")
+                    dockerImage = docker.build( appRegistry + ":$BUILD_NUMBER", "-f ./Docker-files/app/ .")
                 }
             }
         }
