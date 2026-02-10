@@ -29,7 +29,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker system prune -af'
+            sh 'docker image prune -f'
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
                 color: COLOR_MAP[currentBuild.currentResult],
