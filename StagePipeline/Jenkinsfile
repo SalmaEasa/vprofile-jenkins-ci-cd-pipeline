@@ -125,6 +125,14 @@ stage('Sonar Analysis') {
             }
         }
 
+        stage("Approval") {
+            steps {
+                script {
+                    input message: "Approve Staging Deployment?", ok: "Deploy Now!"
+                }
+            }
+        }
+
         stage("Deploy to staging ECS"){
             steps{
                     withAWS(credentials: 'awscreds', region: 'us-east-1') {
