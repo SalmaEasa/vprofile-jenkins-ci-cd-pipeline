@@ -18,7 +18,16 @@ pipeline {
     }
 
     stages{
-        stage("Deploy to staging ECS"){
+
+        stage('Promote to Production (Approval)') {
+            steps {
+                script {
+                    echo "The build is ready for Production. Waiting for approval..."
+                    input message: "Go for Production Deployment?", ok: "Yes, Deploy Now!"
+                }
+            }
+        }
+        stage('Deploy to staging ECS'){
             steps{
                     withAWS(credentials: 'awscreds', region: 'us-east-1') {
                         sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
@@ -29,7 +38,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker image prune -f'
+            sh 'docker image prune -a -f'
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
                 color: COLOR_MAP[currentBuild.currentResult],
