@@ -125,13 +125,13 @@ stage('Sonar Analysis') {
             }
         }
 
-        stage("Approval") {
-            steps {
-                script {
-                    input message: "Approve Staging Deployment?", ok: "Deploy Now!"
-                }
-            }
-        }
+        // stage("Approval") {
+        //     steps {
+        //         script {
+        //             input message: "Approve Staging Deployment?", ok: "Deploy Now!"
+        //         }
+        //     }
+        // }
 
         stage("Deploy to staging ECS"){
             steps{
