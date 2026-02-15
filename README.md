@@ -1,101 +1,85 @@
-# 🚀 vProfile Multitier Java Stack: Automated CI Pipeline
-##
-This repository contains the complete **Jenkins CI Pipeline** for the vProfile Java application. The project demonstrates a production-grade DevOps workflow, ensuring every code push is automatically built, analyzed, and stored.
+# 🚀 vProfile Multi-tier Java Application: End-to-End CI/CD Pipeline on AWS
+
+## 📌 Project Overview
+This project demonstrates a robust, enterprise-grade CI/CD pipeline for a multi-tier Java application (vProfile). The architecture is designed for high availability and scalability, utilizing **Jenkins** for automation and **AWS ECS (Fargate)** for container orchestration.
+
+The goal was to move from a monolithic-style deployment to a modern, containerized microservices-ready infrastructure with integrated security and quality gates.
 
 ---
 
-## 🏗 System Architecture
-The infrastructure is hosted on **AWS EC2**, utilizing a distributed 3-server architecture to ensure resource isolation and optimal performance.
+## 🏗️ Architecture & Tools
+* **CI/CD Automation:** Jenkins (Pipeline as Code)
+* **Source Control:** Git & GitHub (Branching Strategy: main, staging, production)
+* **Static Code Analysis:** SonarQube (Quality Gates)
+* **Artifact Management:** Sonatype Nexus
+* **Containerization:** Docker & Amazon ECR
+* **Orchestration:** Amazon ECS (Fargate)
+* **Load Balancing:** AWS Application Load Balancer (ALB)
+* **Notifications:** Slack Integration
 
-![System Architecture](./Diagrams/image.png)
+---
+## 🏗️ Architecture & Pipeline Design
 
-* **Jenkins Server**: Orchestrates the CI pipeline and executes Maven builds.
-* **SonarQube Server**: Performs static code analysis and quality gate checks.
-* **Nexus Repository Manager**: Manages internal releases and caches external dependencies.
+### 🗺️ System Architecture
+The project follows a cloud-native approach, utilizing **AWS ECS Fargate** to achieve a serverless, highly scalable environment. The infrastructure is divided into two isolated environments: **Staging** and **Production**.
+
+![Architecture Diagram](Diagrams/vprofile_arch_diagram.png)
+
+### 🚀 CI/CD Workflow Breakdown
+
+The automation is split into two distinct, isolated pipelines to ensure maximum security and stability:
+
+#### 1. Staging Pipeline (Continuous Integration & Testing)
+* **Trigger:** Automated via **GitHub Webhooks** on every push to the `staging` branch.
+* **Code Quality:** Integrated **SonarQube** for static code analysis and quality gate enforcement.
+* **Artifact Management:** Packages the application into a **Docker Image**.
+* **Registry:** Pushes the versioned image to **Amazon ECR**.
+* **Deployment:** Automatically updates the **ECS Staging Service**, making the app reachable via the **Staging ALB**.
+
+#### 2. Production Pipeline (Controlled Deployment)
+* **Strategy:** Immutable Deployment (uses the exact same image verified in Staging).
+* **Manual Approval:** Implements a **Governance Gate**. The deployment pauses until a manual sign-off is provided in Jenkins.
+* **Promotion:** Once approved, the verified image is promoted to the **Production ECS Cluster**.
+* **High Availability:** Managed by a **Production ALB** to ensure zero-downtime and traffic balancing.
 
 ---
 
-## 📂 Project Structure
-```text
-vprofile-jenkins-ci-automation/
-├── src/                    # Java source code (Spring Boot)
-│   ├── main/               # Application logic & web assets
-│   └── test/               # Unit and Integration tests
-├── userdata/               # EC2 Provisioning scripts
-├── Jenkinsfile             # Declarative Pipeline-as-Code
-├── pom.xml                 # Maven Project Configuration
-├── README.md               # Project documentation
-└── settings.xml            # Nexus authentication configuration
-```
----
-
-## 🚀 Pipeline Workflow
-
-- Developer Push: Triggered by a GitHub Webhook  
-- Build Stage: Compiled using Maven and JDK 17  
-- Code Analysis: Analyzed by SonarScanner for security and bugs  
-- Quality Gate: Automated check to ensure code meets standards  
-- Artifact Upload: `.war` files versioned and pushed to Nexus  
-- Real-time Alerts: Status updates sent to Slack  
+## 🛠️ Infrastructure Highlights
+* **Serverless Execution:** Used **AWS Fargate** to remove the overhead of managing EC2 instances.
+* **Security:** Credentials and AWS keys are managed securely via **Jenkins Credentials Store**.
+* **Monitoring:** Real-time feedback provided through **Slack Notifications** for build successes and deployment status.
 
 ---
 
-## 🛠 Project Roadmap (Steps Taken)
-
-### Phase 1: Infrastructure Setup
-
-- AWS Environment: Configured Security Groups for ports 8080 (Jenkins), 8081 (Nexus), and 9000 (SonarQube).
-
-- EC2 Provisioning: Launched instances with UserData scripts for automated tool installation.
-
-- Nexus Repositories: Implemented a 4-repo strategy: Proxy, Release, Snapshot, and Group.
-
-### Phase 2: Pipeline Development
-- Git Migration: Migrated source code to a dedicated repository for CI testing.
-
-- Maven Integration: Configured settings.xml with credentials for secure Nexus communication.
-
-- SonarQube Integration: Configured a "Quality Gate" stage to ensure code meets security standards.
-
-### Phase 3: Automation & Monitoring
-- Webhooks: Enabled GitHub-to-Jenkins triggers for continuous integration.
-
-- Slack Integration: Developed a Groovy-based notification block using a COLOR_MAP.
+## 🌿 Branching Strategy
+* `main`: Documentation, Architecture Diagrams, and Stable Release tracking.
+* `staging`: Continuous Integration and Testing environment.
+* `production`: Stable, peer-reviewed code for live deployment.
 
 ---
 
-##  💻 Tech Stack
-* Cloud: AWS (EC2, EBS, Security Groups)
+## 📊 Visualizations (Project Snapshots)
 
-* CI/CD: Jenkins (Declarative Pipeline)
+#### 🧪 Staging Environment (Continuous Deployment)
+*The staging pipeline ensures that every commit is built, scanned.
+* **Build & Artifacts:** Successfully generated `vprofile-v2.war` and stored it for deployment.
+* **Pipeline Status:** ![Jenkins Staging Build](Diagrams/staging_pipeline_success.png)
+* **Quality Gate:** ![SonarQube Results](Diagrams/sonarqube.png)
 
-* Build Tool: Maven
 
-* Quality Gate: SonarQube
+### 🚀 Production Environment
+*Deployment triggered from `prod` branch with a mandatory manual approval step for maximum safety.*
+* **Pipeline Status:** ![Jenkins Production](Diagrams/production_pipeline.png)
+* **Monitoring:** ![Slack Notification](Diagrams/slack_notification.png)
 
-* Artifacts: Sonatype Nexus
-
-* SCM: GitHub (Webhooks)
-
-* Communication: Slack
-
----
-
-## 🔧 Infrastructure & Engineering Challenges
-
-| 🚩 Challenge | 📉 Impact | 🛠️ Resolution |
-| :--- | :--- | :--- |
-| **Nexus Storage Failure** | **500 Internal Server Error** during artifact upload due to 82%+ disk utilization. | Modified AWS EBS volume (8GB → 20GB). Performed a live resize of the **XFS filesystem** using `growpart` and `xfs_growfs` to prevent data loss. |
-| **Dependency Latency** | Slow build times (5+ mins) caused by repetitive downloads from Maven Central. | Configured a **Proxy Repository** in Nexus to cache dependencies locally, reducing subsequent build times by **~40%**. |
-| **Pipeline Syntax Errors** | Jenkins build failures caused by complex nesting in the `environment` block. | Refactored the **Declarative Jenkinsfile** to resolve Groovy nesting issues and standardized Global Tool paths for JDK 17. |
 
 ---
 
-## 📦 How to Use
-**Infrastructure**: Provision 3 EC2 instances (Ubuntu/Amazon Linux).
+## 🚀 Key Learning Outcomes
+* Architecting scalable environments on AWS using ECS and Fargate.
+* Managing sensitive data and credentials securely within Jenkins.
+* Implementing notification systems (Slack) for real-time pipeline monitoring.
+* Optimizing Docker images for faster deployment cycles.
 
-**Setup**: Install JDK 17, Maven, and necessary Jenkins plugins.
-
-**Configuration**: Update environment variables in the Jenkinsfile with your specific server IPs.
-
-**Execution**: Push code to the main branch and monitor the Jenkins dashboard.
+---
+**Prepared by:** [Salma Easa]
