@@ -125,6 +125,14 @@ stage('Sonar Analysis') {
             }
         }
 
+        // stage("Approval") {
+        //     steps {
+        //         script {
+        //             input message: "Approve Staging Deployment?", ok: "Deploy Now!"
+        //         }
+        //     }
+        // }
+
         stage("Deploy to staging ECS"){
             steps{
                     withAWS(credentials: 'awscreds', region: 'us-east-1') {
@@ -134,19 +142,14 @@ stage('Sonar Analysis') {
         }
     }
 
-    post {
-        always {
-<<<<<<< Updated upstream
-            sh 'docker system prune -af'
-            echo 'Slack Notifications.'
-            slackSend channel: '#jenkinscicd',
-                color: COLOR_MAP[currentBuild.currentResult],
-                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
-        }
-=======
-            sh 'docker image prune -a -f'
-            }
->>>>>>> Stashed changes
-    }
+    // post {
+    //     always {
+    //         sh 'docker system prune -a -f'
+    //         echo 'Slack Notifications.'
+    //         slackSend channel: '#jenkinscicd',
+    //             color: COLOR_MAP[currentBuild.currentResult],
+    //             message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+    //     }
+    
 }
 
